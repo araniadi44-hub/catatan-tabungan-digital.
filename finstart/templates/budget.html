@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% from "_macros.html" import period_filter, progress with context %}
+{% block title %}Anggaran{% endblock %}
+{% block heading %}Budget Planner{% endblock %}
+
+{% block actions %}{{ period_filter(month, year, url_for('budget')) }}{% endblock %}
+
+{% block content %}
+<p class="subtle">Alokasi anggaran <strong>{{ label }}</strong> dihitung otomatis dari total pemasukan bulan tersebut.</p>
+
+<section class="card">
+    <div class="card-head">
+        <h2>Pengaturan Persentase</h2>
+        <span class="pill">Contoh: 50 / 30 / 20</span>
+    </div>
+    <form method="post" action="{{ url_for('save_budget') }}" id="budgetForm">
+        <input type="hidden" name="month" value="{{ month }}">
+        <input type="hidden" name="year" value="{{ year }}">
+        <div class="pct-grid">
+            <div class="field">
+                <label for="pctNeeds">Kebutuhan (%)</label>
+                <input type="number" id="pctNeeds" name="needs" min="0" max="100" step="1" required value="{{ report.percentages.needs }}">
+            </div>
+            <div class="field">
+                <label for="pctWants">Keinginan (%)</label>
+                <input type="number" id="pctWants" name="wants" min="0" max="100" step="1" required value="{{ report.percentages.wants }}">
+            </div>
+            <div class="field">
+                <label for="pctSavings">Tabungan (%)</label>
+                <input type="number" id="pctSavings" name="savings" min="0" max="100" step="1" required value="{{ report.percentages.savings }}">
+            </div>
+            <div class="pct-total" id="pctTotalBox">
+                <small>Total</small>
+                <strong id="pctTotal">100%</strong>
+            </div>
+        </div>
+        <div class="btn-row">
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check2"></i> Simpan Persentase</button>
+            <button type="button" class="btn btn-ghost" id="resetBudget"><i class="bi bi-arrow-counterclockwise"></i> Kembalikan 50/30/20</button>
+        </div>
+    </form>
+</section>
+
+<section class="stats stats-3">
+    <article class="stat stat-income">
+        <span class="stat-icon"><i class="bi bi-cash-stack"></i></span>
+        <div><small>Pemasukan {{ label }}</small><strong>{{ report.income|rupiah }}</strong></div>
+    </article>
+</section>
+
+{% if report.income == 0 %}
+<div class="alert alert-info"><i class="bi bi-info-circle"></i> Belum ada pemasukan pada periode ini, sehingga alokasi anggaran masih Rp 0. Catat pemasukan di menu Transaksi.</div>
+{% endif %}
+
+<section class="grid grid-3">
+    {% for key in ['needs', 'wants', 'savings'] %}
+    {% set g = report.groups[key] %}
+    <article class="card budget-card budget-{{ g.status }}">
+        <div class="budget-top">
+            <span class="stat-icon"><i class="bi {{ g.icon }}"></i></span>
+            <div>
+                <h3>{{ g.label }}</h3>
+                <small>{{ g.percentage }}% dari pemasukan</small>
+            </div>
+        </div>
+        <dl class="kv">
+            <div><dt>Alokasi</dt><dd>{{ g.allocated|rupiah }}</dd></div>
+            <div><dt>{{ 'Ditabung' if key == 'savings' else 'Terpakai' }}</dt><dd>{{ g.spent|rupiah }}</dd></div>
+            <div><dt>{{ 'Selisih target' if key == 'savings' else 'Sisa' }}</dt><dd class="{{ 'status-text-over' if g.remaining < 0 and key != 'savings' }}">{{ g.remaining|rupiah }}</dd></div>
+        </dl>
+        {{ progress(g.used_percent, g.status) }}
+        <div class="budget-foot">
+            <strong>{{ g.used_percent|round|int }}%</strong>
+            {% if key == 'savings' %}
+                {% if g.allocated > 0 and g.spent >= g.allocated %}
+                    <span class="status-chip chip-ok"><i class="bi bi-check-circle"></i> Target tabungan bulan ini tercapai</span>
+                {% elif g.allocated > 0 %}
+                    <span class="status-chip chip-warning"><i class="bi bi-hourglass-split"></i> Belum mencapai target tabungan</span>
+                {% endif %}
+            {% elif g.status == 'over' %}
+                <span class="status-chip chip-over"><i class="bi bi-exclamation-octagon"></i> Anggaran terlampaui</span>
+            {% elif g.status == 'warning' %}
+                <span class="status-chip chip-warning"><i class="bi bi-exclamation-triangle"></i> Anggaran hampir habis</span>
+            {% else %}
+                <span class="status-chip chip-ok"><i class="bi bi-check-circle"></i> Masih aman</span>
+            {% endif %}
+        </div>
+        {% if g.categories %}<small class="muted-block">Kategori: {{ g.categories|join(', ') }}</small>{% endif %}
+        {% if key == 'savings' %}<small class="muted-block">Dihitung dari setoran ke Target Tabungan bulan ini.</small>{% endif %}
+    </article>
+    {% endfor %}
+</section>
+{% endblock %}

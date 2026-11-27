@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% from "_macros.html" import progress with context %}
+{% block title %}Target Tabungan{% endblock %}
+{% block heading %}Target Tabungan{% endblock %}
+
+{% block content %}
+<section class="stats stats-3">
+    <article class="stat stat-savings">
+        <span class="stat-icon"><i class="bi bi-piggy-bank"></i></span>
+        <div>
+            <small>Total Seluruh Tabungan</small>
+            <strong>{{ total_savings|rupiah }}</strong>
+            <em>Saldo awal + semua setoran</em>
+        </div>
+    </article>
+    <article class="stat stat-balance">
+        <span class="stat-icon"><i class="bi bi-bullseye"></i></span>
+        <div><small>Jumlah target</small><strong>{{ goals|length }}</strong></div>
+    </article>
+</section>
+
+<article class="card">
+    <div class="card-head">
+        <h2>Buat Target Baru</h2>
+    </div>
+    <form method="post" action="{{ url_for('add_goal') }}">
+        <div class="field-row field-row-3">
+            <div class="field">
+                <label for="gName">Nama target</label>
+                <input type="text" id="gName" name="name" maxlength="60" required placeholder="Contoh: Laptop Baru">
+            </div>
+            <div class="field">
+                <label for="gTarget">Nominal target (Rp)</label>
+                <input type="number" id="gTarget" name="target" min="1" step="1" required placeholder="8000000"
+                    inputmode="numeric">
+            </div>
+            <div class="field">
+                <label for="gInitial">Saldo awal tabungan (Rp)</label>
+                <input type="number" id="gInitial" name="initial" min="0" step="1" value="0" inputmode="numeric">
+            </div>
+        </div>
+        <p class="hint"><i class="bi bi-info-circle"></i> Saldo awal adalah uang yang <em>sudah kamu miliki</em> untuk
+            target ini. Saldo awal tidak mengurangi sisa saldo bulanan, sedangkan setoran baru akan mengurangi sisa
+            saldo bulan tersebut.</p>
+        <div class="btn-row">
+            <button type="submit" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Simpan Target</button>
+        </div>
+    </form>
+</article>
+
+{% if goals %}
+<section class="grid grid-2">
+    {% for g in goals %}
+    <article class="card goal-card {{ 'goal-done' if g.done }}">
+        <div class="goal-head">
+            <div>
+                <h3>{{ g.name }}</h3>
+                {% if g.done %}<span class="status-chip chip-ok"><i class="bi bi-trophy"></i> Target tercapai!</span>{%
+                endif %}
+            </div>
+            <form method="post" action="{{ url_for('delete_goal', goal_id=g.id) }}" class="inline-form"
+                data-confirm="Hapus target &quot;{{ g.name }}&quot; beserta seluruh riwayat setorannya?">
+                <button type="submit" class="icon-btn danger" title="Hapus target" aria-label="Hapus target"><i
+                        class="bi bi-trash"></i></button>
+            </form>
+        </div>
+
+        <div class="goal-percent">
+            <strong>{{ g.percent|round|int }}%</strong>
+            <span>tercapai</span>
+        </div>
+        {{ progress(g.percent, 'done' if g.done else 'ok') }}
+
+        <dl class="kv">
+            <div>
+                <dt>Terkumpul</dt>
+                <dd>{{ g.current|rupiah }}</dd>
+            </div>
+            <div>
+                <dt>Target</dt>
+                <dd>{{ g.target|rupiah }}</dd>
+            </div>
+            <div>
+                <dt>Sisa target</dt>
+                <dd>{{ g.remaining|rupiah }}</dd>
+            </div>
+        </dl>
+        <small class="muted-block">Saldo awal {{ g.initial|rupiah }} + setoran {{ g.deposited|rupiah }}</small>
+
+        <form method="post" action="{{ url_for('add_deposit', goal_id=g.id) }}" class="deposit-form">
+            <div class="field-row field-row-3">
+                <div class="field">
+                    <label for="dep-a-{{ g.id }}">Tambah dana (Rp)</label>
+                    <input type="number" id="dep-a-{{ g.id }}" name="amount" min="1" step="1" required
+                        placeholder="100000" inputmode="numeric">
+                </div>
+                <div class="field">
+                    <label for="dep-d-{{ g.id }}">Tanggal</label>
+                    <input type="date" id="dep-d-{{ g.id }}" name="date" value="{{ today }}" required>
+                </div>
+                <div class="field">
+                    <label for="dep-n-{{ g.id }}">Catatan</label>
+                    <input type="text" id="dep-n-{{ g.id }}" name="note" maxlength="200" placeholder="Opsional">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block"><i class="bi bi-plus-circle"></i> Tambah ke
+                Tabungan</button>
+        </form>
+
+        {% if g.deposits %}
+        <details class="history">
+            <summary>Riwayat setoran ({{ g.deposits|length }})</summary>
+            <ul class="tx-list compact">
+                {% for d in g.deposits %}
+                <li>
+                    <span class="tx-icon tx-income"><i class="bi bi-plus-lg"></i></span>
+                    <div class="tx-main">
+                        <strong>{{ d.amount|rupiah }}</strong>
+                        <small>{{ d.date|tanggal }}{% if d.note %} · {{ d.note }}{% endif %}</small>
+                    </div>
+                    <form method="post" action="{{ url_for('delete_deposit', deposit_id=d.id) }}" class="inline-form"
+                        data-confirm="Hapus setoran {{ d.amount|rupiah }}?">
+                        <button type="submit" class="icon-btn danger" title="Hapus setoran"
+                            aria-label="Hapus setoran"><i class="bi bi-x-lg"></i></button>
+                    </form>
+                </li>
+                {% endfor %}
+            </ul>
+        </details>
+        {% endif %}
+    </article>
+    {% endfor %}
+</section>
+{% else %}
+<article class="card empty-state">
+    <i class="bi bi-piggy-bank"></i>
+    <p>Belum ada target tabungan. Buat target pertamamu di atas.</p>
+</article>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% from "_macros.html" import period_filter with context %}
+{% block title %}Transaksi{% endblock %}
+{% block heading %}Transaksi{% endblock %}
+
+{% block actions %}
+<button class="btn btn-primary" type="button" data-open-tx><i class="bi bi-plus-lg"></i> <span class="hide-sm">Tambah Transaksi</span></button>
+{% endblock %}
+
+{% block content %}
+<form class="card filter-card" method="get" action="{{ url_for('transactions') }}">
+    <div class="filter-grid">
+        <div class="field">
+            <label for="q">Cari</label>
+            <div class="input-icon">
+                <i class="bi bi-search"></i>
+                <input type="search" id="q" name="q" value="{{ q }}" placeholder="Nama, kategori, atau catatan">
+            </div>
+        </div>
+        <div class="field">
+            <label for="fType">Jenis</label>
+            <select id="fType" name="type">
+                <option value="">Semua</option>
+                <option value="income" {{ 'selected' if ttype == 'income' }}>Pemasukan</option>
+                <option value="expense" {{ 'selected' if ttype == 'expense' }}>Pengeluaran</option>
+            </select>
+        </div>
+        <div class="field">
+            <label for="fCategory">Kategori</label>
+            <select id="fCategory" name="category">
+                <option value="">Semua</option>
+                {% for c in all_categories %}
+                <option value="{{ c }}" {{ 'selected' if category == c }}>{{ c }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="field">
+            <label for="fMonth">Bulan</label>
+            <select id="fMonth" name="month">
+                <option value="0" {{ 'selected' if month == 0 }}>Semua bulan</option>
+                {% for name in months[1:] %}
+                <option value="{{ loop.index }}" {{ 'selected' if month == loop.index }}>{{ name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="field">
+            <label for="fYear">Tahun</label>
+            <select id="fYear" name="year">
+                <option value="0" {{ 'selected' if year == 0 }}>Semua tahun</option>
+                {% for y in years %}
+                <option value="{{ y }}" {{ 'selected' if year == y }}>{{ y }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+    <div class="filter-actions">
+        <button type="submit" class="btn btn-primary"><i class="bi bi-funnel"></i> Terapkan</button>
+        <a class="btn btn-ghost" href="{{ url_for('transactions') }}">Atur ulang</a>
+    </div>
+</form>
+
+<section class="stats stats-3">
+    <article class="stat stat-income">
+        <span class="stat-icon"><i class="bi bi-arrow-down-left-circle"></i></span>
+        <div><small>Pemasukan (hasil filter)</small><strong>{{ total_income|rupiah }}</strong></div>
+    </article>
+    <article class="stat stat-expense">
+        <span class="stat-icon"><i class="bi bi-arrow-up-right-circle"></i></span>
+        <div><small>Pengeluaran (hasil filter)</small><strong>{{ total_expense|rupiah }}</strong></div>
+    </article>
+    <article class="stat stat-balance">
+        <span class="stat-icon"><i class="bi bi-list-check"></i></span>
+        <div><small>Jumlah transaksi</small><strong>{{ rows|length }}</strong><em>{{ label }}</em></div>
+    </article>
+</section>
+
+<article class="card">
+    <div class="card-head"><h2>Riwayat Transaksi</h2></div>
+    {% if rows %}
+    <div class="table-wrap">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Tanggal</th>
+                    <th>Nama</th>
+                    <th>Kategori</th>
+                    <th class="num">Nominal</th>
+                    <th class="actions-col">Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in rows %}
+                <tr>
+                    <td data-label="Tanggal">{{ t.date|tanggal }}</td>
+                    <td data-label="Nama">
+                        <strong>{{ t.name }}</strong>
+                        {% if t.note %}<small class="muted-block">{{ t.note }}</small>{% endif %}
+                    </td>
+                    <td data-label="Kategori">
+                        <span class="badge badge-{{ t.type }}"><i class="bi {{ category_icons.get(t.category, 'bi-circle') }}"></i> {{ t.category }}</span>
+                    </td>
+                    <td data-label="Nominal" class="num amount-{{ t.type }}">{{ '+' if t.type == 'income' else '−' }}{{ t.amount|rupiah }}</td>
+                    <td class="actions-col">
+                        <button type="button" class="icon-btn" title="Ubah" aria-label="Ubah transaksi"
+                                data-edit-tx
+                                data-id="{{ t.id }}"
+                                data-name="{{ t.name }}"
+                                data-type="{{ t.type }}"
+                                data-category="{{ t.category }}"
+                                data-amount="{{ t.amount }}"
+                                data-date="{{ t.date }}"
+                                data-note="{{ t.note }}"><i class="bi bi-pencil"></i></button>
+                        <form method="post" action="{{ url_for('delete_transaction', tx_id=t.id) }}" class="inline-form"
+                              data-confirm="Hapus transaksi &quot;{{ t.name }}&quot;?">
+                            <input type="hidden" name="next" value="{{ current_url }}">
+                            <button type="submit" class="icon-btn danger" title="Hapus" aria-label="Hapus transaksi"><i class="bi bi-trash"></i></button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="bi bi-inbox"></i>
+        <p>Tidak ada transaksi yang cocok dengan filter ini.</p>
+        <button class="btn btn-primary" type="button" data-open-tx><i class="bi bi-plus-lg"></i> Tambah Transaksi</button>
+    </div>
+    {% endif %}
+</article>
+{% endblock %}
+
+{% block modals %}{% include "_transaction_modal.html" %}{% endblock %}

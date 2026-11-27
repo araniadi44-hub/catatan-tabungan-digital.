@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Kalkulator{% endblock %}
+{% block heading %}Kalkulator Keuangan{% endblock %}
+
+{% block content %}
+<p class="subtle">Isi angka lalu tekan tombol hitung. Perhitungan dilakukan oleh server Flask.</p>
+
+<section class="grid grid-2">
+    <!-- 1. Pembagian anggaran -->
+    <article class="card calc-card">
+        <div class="card-head"><h2><i class="bi bi-pie-chart"></i> Pembagian Anggaran</h2></div>
+        <form class="calc-form" data-calc="budget">
+            <div class="field">
+                <label>Pemasukan bulanan (Rp)</label>
+                <input type="number" name="income" min="1" step="1" required placeholder="2000000" inputmode="numeric">
+            </div>
+            <div class="field-row field-row-3">
+                <div class="field"><label>Kebutuhan %</label><input type="number" name="needs" min="0" max="100" step="1" value="50" required></div>
+                <div class="field"><label>Keinginan %</label><input type="number" name="wants" min="0" max="100" step="1" value="30" required></div>
+                <div class="field"><label>Tabungan %</label><input type="number" name="savings" min="0" max="100" step="1" value="20" required></div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block"><i class="bi bi-calculator"></i> Hitung</button>
+            <div class="calc-result" hidden></div>
+        </form>
+    </article>
+
+    <!-- 2. Target tabungan -->
+    <article class="card calc-card">
+        <div class="card-head"><h2><i class="bi bi-piggy-bank"></i> Target Tabungan</h2></div>
+        <form class="calc-form" data-calc="saving">
+            <div class="field">
+                <label>Nominal target (Rp)</label>
+                <input type="number" name="target" min="1" step="1" required placeholder="6000000" inputmode="numeric">
+            </div>
+            <div class="field-row">
+                <div class="field"><label>Tabungan saat ini (Rp)</label><input type="number" name="current" min="0" step="1" value="0" inputmode="numeric"></div>
+                <div class="field"><label>Jangka waktu (bulan)</label><input type="number" name="months" min="1" max="1200" step="1" required placeholder="10" inputmode="numeric"></div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block"><i class="bi bi-calculator"></i> Hitung</button>
+            <div class="calc-result" hidden></div>
+        </form>
+    </article>
+
+    <!-- 3. Sisa uang bulanan -->
+    <article class="card calc-card">
+        <div class="card-head"><h2><i class="bi bi-wallet2"></i> Sisa Uang Bulanan</h2></div>
+        <form class="calc-form" data-calc="leftover">
+            <div class="field">
+                <label>Pemasukan bulanan (Rp)</label>
+                <input type="number" name="income" min="1" step="1" required placeholder="2000000" inputmode="numeric">
+            </div>
+            <div class="field-row field-row-3">
+                <div class="field"><label>Pengeluaran wajib (Rp)</label><input type="number" name="fixed" min="0" step="1" value="0" inputmode="numeric"></div>
+                <div class="field"><label>Pengeluaran lain (Rp)</label><input type="number" name="variable" min="0" step="1" value="0" inputmode="numeric"></div>
+                <div class="field"><label>Tabungan (Rp)</label><input type="number" name="savings" min="0" step="1" value="0" inputmode="numeric"></div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block"><i class="bi bi-calculator"></i> Hitung</button>
+            <div class="calc-result" hidden></div>
+        </form>
+    </article>
+
+    <!-- 4. Batas pengeluaran harian -->
+    <article class="card calc-card">
+        <div class="card-head"><h2><i class="bi bi-calendar-day"></i> Batas Pengeluaran Harian</h2></div>
+        <form class="calc-form" data-calc="daily">
+            <div class="field">
+                <label>Uang yang tersedia (Rp)</label>
+                <input type="number" name="available" min="1" step="1" required placeholder="1500000" inputmode="numeric">
+            </div>
+            <div class="field-row field-row-3">
+                <div class="field"><label>Kebutuhan wajib tersisa (Rp)</label><input type="number" name="fixed" min="0" step="1" value="0" inputmode="numeric"></div>
+                <div class="field"><label>Tabungan (Rp)</label><input type="number" name="savings" min="0" step="1" value="0" inputmode="numeric"></div>
+                <div class="field"><label>Sisa hari</label><input type="number" name="days" min="1" max="366" step="1" required placeholder="30" id="daysLeft" inputmode="numeric"></div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block"><i class="bi bi-calculator"></i> Hitung</button>
+            <div class="calc-result" hidden></div>
+        </form>
+    </article>
+</section>
+{% endblock %}

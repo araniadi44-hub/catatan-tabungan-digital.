@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}FinStart{% endblock %} – FinStart</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2315a05a'/%3E%3Cpath d='M7 22l6-7 5 4 7-9' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap-icons.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="app">
+    <aside class="sidebar" id="sidebar">
+        <a class="brand" href="{{ url_for('dashboard') }}">
+            <span class="brand-mark"><i class="bi bi-graph-up-arrow"></i></span>
+            <span>
+                <strong>FinStart</strong>
+                <small>Smart Money Management</small>
+            </span>
+        </a>
+        <nav class="nav">
+            <a class="nav-link {{ 'active' if page == 'dashboard' }}" href="{{ url_for('dashboard') }}"><i class="bi bi-grid-1x2"></i> Dashboard</a>
+            <a class="nav-link {{ 'active' if page == 'transactions' }}" href="{{ url_for('transactions') }}"><i class="bi bi-arrow-left-right"></i> Transaksi</a>
+            <a class="nav-link {{ 'active' if page == 'budget' }}" href="{{ url_for('budget') }}"><i class="bi bi-pie-chart"></i> Anggaran</a>
+            <a class="nav-link {{ 'active' if page == 'savings' }}" href="{{ url_for('savings') }}"><i class="bi bi-piggy-bank"></i> Target Tabungan</a>
+            <a class="nav-link {{ 'active' if page == 'guide' }}" href="{{ url_for('guide') }}"><i class="bi bi-signpost-2"></i> Panduan Keuangan</a>
+            <a class="nav-link {{ 'active' if page == 'education' }}" href="{{ url_for('education') }}"><i class="bi bi-book"></i> Edukasi</a>
+            <a class="nav-link {{ 'active' if page == 'calculator' }}" href="{{ url_for('calculator') }}"><i class="bi bi-calculator"></i> Kalkulator</a>
+        </nav>
+        <div class="sidebar-foot">
+            <i class="bi bi-lightbulb"></i>
+            <p>Catat setiap transaksi di hari yang sama agar laporanmu selalu akurat.</p>
+        </div>
+    </aside>
+    <div class="backdrop" id="backdrop"></div>
+
+    <main class="main">
+        <header class="topbar">
+            <button class="icon-btn menu-toggle" id="menuToggle" type="button" aria-label="Buka menu">
+                <i class="bi bi-list"></i>
+            </button>
+            <h1 class="page-title">{% block heading %}{% endblock %}</h1>
+            <div class="topbar-actions">{% block actions %}{% endblock %}</div>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-stack">
+            {% for category, message in messages %}
+            <div class="flash flash-{{ category }}" role="alert">
+                <i class="bi {{ 'bi-check-circle' if category == 'success' else 'bi-exclamation-triangle' }}"></i>
+                <span>{{ message }}</span>
+                <button type="button" class="flash-close" aria-label="Tutup">&times;</button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <div class="content">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+</div>
+
+{% block modals %}{% endblock %}
+<script src="{{ url_for('static', filename='vendor/chart.umd.js') }}"></script>
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

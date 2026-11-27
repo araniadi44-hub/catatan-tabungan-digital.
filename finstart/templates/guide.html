@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% from "_macros.html" import progress with context %}
+{% block title %}Panduan Keuangan{% endblock %}
+{% block heading %}Panduan Keuangan{% endblock %}
+
+{% block content %}
+<section class="card guide-overview">
+    <div>
+        <h2>Progres belajarmu</h2>
+        <p class="subtle">Selesaikan enam langkah berikut secara berurutan. Progres tersimpan otomatis di database.</p>
+    </div>
+    <div class="guide-progress">
+        <strong id="guideDone">{{ done }}</strong> / {{ total }} langkah
+        <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-bar progress-ok" id="guideBar" style="width: {{ (done / total * 100)|round|int }}%"></div>
+        </div>
+    </div>
+</section>
+
+<section class="steps">
+    {% for s in steps %}
+    {% set st = state.get(s.step, {'completed': False, 'checked': []}) %}
+    <article class="card step {{ 'is-done' if st.completed }}" data-step="{{ s.step }}">
+        <header class="step-head">
+            <span class="step-number">{{ s.step }}</span>
+            <div>
+                <h2><i class="bi {{ s.icon }}"></i> {{ s.title }}</h2>
+                <p class="subtle">{{ s.summary }}</p>
+            </div>
+            <span class="status-chip chip-ok step-badge" {{ 'hidden' if not st.completed }}><i class="bi bi-check-circle-fill"></i> Selesai</span>
+        </header>
+
+        <div class="step-body">
+            <h3>Penjelasan</h3>
+            <p>{{ s.explanation }}</p>
+
+            <div class="example-box">
+                <strong><i class="bi bi-lightbulb"></i> Contoh</strong>
+                <p>{{ s.example }}</p>
+            </div>
+
+            <h3>Checklist</h3>
+            <ul class="checklist">
+                {% for item in s.checklist %}
+                <li>
+                    <label>
+                        <input type="checkbox" data-step="{{ s.step }}" data-index="{{ loop.index0 }}" {{ 'checked' if loop.index0 in st.checked }}>
+                        <span>{{ item }}</span>
+                    </label>
+                </li>
+                {% endfor %}
+            </ul>
+
+            <button type="button" class="btn {{ 'btn-ghost' if st.completed else 'btn-primary' }} complete-btn"
+                    data-step="{{ s.step }}" data-completed="{{ 'true' if st.completed else 'false' }}">
+                {% if st.completed %}<i class="bi bi-arrow-counterclockwise"></i> Batalkan tanda selesai{% else %}<i class="bi bi-check2-circle"></i> Tandai selesai{% endif %}
+            </button>
+        </div>
+    </article>
+    {% endfor %}
+</section>
+{% endblock %}

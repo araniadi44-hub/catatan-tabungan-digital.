@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% from "_macros.html" import period_filter, progress with context %}
+{% block title %}Dashboard{% endblock %}
+{% block heading %}Dashboard{% endblock %}
+
+{% block actions %}
+{{ period_filter(month, year, url_for('dashboard')) }}
+<button class="btn btn-primary" type="button" data-open-tx><i class="bi bi-plus-lg"></i> <span class="hide-sm">Tambah Transaksi</span></button>
+{% endblock %}
+
+{% block content %}
+<p class="subtle">Ringkasan keuangan <strong>{{ label }}</strong>. Semua angka dihitung otomatis dari database.</p>
+
+<section class="stats">
+    <article class="stat stat-income">
+        <span class="stat-icon"><i class="bi bi-arrow-down-left-circle"></i></span>
+        <div>
+            <small>Total Pemasukan</small>
+            <strong id="statIncome">{{ summary.income|rupiah }}</strong>
+        </div>
+    </article>
+    <article class="stat stat-expense">
+        <span class="stat-icon"><i class="bi bi-arrow-up-right-circle"></i></span>
+        <div>
+            <small>Total Pengeluaran</small>
+            <strong id="statExpense">{{ summary.expense|rupiah }}</strong>
+        </div>
+    </article>
+    <article class="stat stat-savings">
+        <span class="stat-icon"><i class="bi bi-piggy-bank"></i></span>
+        <div>
+            <small>Total Tabungan</small>
+            <strong id="statSavings">{{ summary.savings_total|rupiah }}</strong>
+            <em>Ditabung bulan ini: {{ summary.saved_month|rupiah }}</em>
+        </div>
+    </article>
+    <article class="stat stat-balance {{ 'is-negative' if summary.balance < 0 }}">
+        <span class="stat-icon"><i class="bi bi-wallet2"></i></span>
+        <div>
+            <small>Sisa Saldo</small>
+            <strong id="statBalance">{{ summary.balance|rupiah }}</strong>
+            <em>Pemasukan − pengeluaran − tabungan</em>
+        </div>
+    </article>
+</section>
+
+<section class="grid grid-2-1">
+    <article class="card">
+        <div class="card-head">
+            <h2>Pemasukan &amp; Pengeluaran</h2>
+            <span class="pill">6 bulan terakhir</span>
+        </div>
+        <div class="chart-box"><canvas id="trendChart" aria-label="Grafik pemasukan dan pengeluaran" role="img"></canvas></div>
+    </article>
+
+    <article class="card">
+        <div class="card-head">
+            <h2>Penggunaan Anggaran</h2>
+        </div>
+        <div class="budget-ring">
+            <strong class="big-percent status-text-{{ budget.overall_status }}">{{ budget.overall_percent|round|int }}%</strong>
+            <span>dari anggaran kebutuhan &amp; keinginan</span>
+        </div>
+        {{ progress(budget.overall_percent, budget.overall_status) }}
+        <p class="subtle small">
+            Terpakai {{ budget.overall_spent|rupiah }} dari {{ budget.overall_allocated|rupiah }}.
+            {% if budget.income == 0 %}
+                Belum ada pemasukan bulan ini, jadi anggaran belum bisa dihitung.
+            {% elif budget.overall_status == 'over' %}
+                <span class="status-text-over">Anggaran terlampaui!</span>
+            {% elif budget.overall_status == 'warning' %}
+                <span class="status-text-warning">Anggaran hampir habis.</span>
+            {% else %}
+                Pemakaian masih aman.
+            {% endif %}
+        </p>
+        <a class="link" href="{{ url_for('budget', month=month, year=year) }}">Lihat rincian anggaran <i class="bi bi-arrow-right"></i></a>
+    </article>
+</section>
+
+<section class="grid grid-1-1">
+    <article class="card">
+        <div class="card-head">
+            <h2>Pengeluaran per Kategori</h2>
+        </div>
+        <div class="chart-box chart-box-sm"><canvas id="categoryChart" aria-label="Grafik pengeluaran per kategori" role="img"></canvas></div>
+        <p class="empty-note" id="categoryEmpty" hidden>Belum ada pengeluaran pada periode ini.</p>
+    </article>
+
+    <article class="card">
+        <div class="card-head">
+            <h2>Transaksi Terbaru</h2>
+            <a class="link" href="{{ url_for('transactions', month=month, year=year) }}">Semua <i class="bi bi-arrow-right"></i></a>
+        </div>
+        {% if recent %}
+        <ul class="tx-list">
+            {% for t in recent %}
+            <li>
+                <span class="tx-icon tx-{{ t.type }}"><i class="bi {{ category_icons.get(t.category, 'bi-circle') }}"></i></span>
+                <div class="tx-main">
+                    <strong>{{ t.name }}</strong>
+                    <small>{{ t.category }} · {{ t.date|tanggal }}</small>
+                </div>
+                <span class="tx-amount amount-{{ t.type }}">{{ '+' if t.type == 'income' else '−' }}{{ t.amount|rupiah }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="empty-note">Belum ada transaksi pada periode ini.</p>
+        {% endif %}
+    </article>
+</section>
+
+{% if goals %}
+<section class="card">
+    <div class="card-head">
+        <h2>Target Tabungan</h2>
+        <a class="link" href="{{ url_for('savings') }}">Kelola <i class="bi bi-arrow-right"></i></a>
+    </div>
+    <div class="goal-mini-list">
+        {% for g in goals %}
+        <div class="goal-mini">
+            <div class="goal-mini-top"><strong>{{ g.name }}</strong><span>{{ g.percent|round|int }}%</span></div>
+            {{ progress(g.percent, 'done' if g.done else 'ok') }}
+            <small>{{ g.current|rupiah }} dari {{ g.target|rupiah }}</small>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block modals %}{% include "_transaction_modal.html" %}{% endblock %}
+
+{% block scripts %}
+<script>
+    // Grafik membaca data langsung dari API (yang menghitung dari database)
+    FinStart.initDashboardCharts({{ month }}, {{ year }});
+</script>
+{% endblock %}

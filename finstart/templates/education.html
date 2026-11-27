@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Edukasi{% endblock %}
+{% block heading %}Edukasi Keuangan{% endblock %}
+
+{% block content %}
+<p class="subtle">Artikel singkat untuk membantumu memahami dasar-dasar mengelola uang. Klik kartu untuk membaca selengkapnya.</p>
+
+<section class="grid grid-3">
+    {% for a in articles %}
+    <article class="card article-card" id="{{ a.id }}">
+        <span class="article-icon"><i class="bi {{ a.icon }}"></i></span>
+        <span class="pill">{{ a.tag }}</span>
+        <h2>{{ a.title }}</h2>
+        <p class="subtle">{{ a.excerpt }}</p>
+        <div class="article-more" hidden>
+            {% for p in a.paragraphs %}<p>{{ p }}</p>{% endfor %}
+        </div>
+        <button type="button" class="btn btn-ghost toggle-article" aria-expanded="false">
+            <span>Baca selengkapnya</span> <i class="bi bi-chevron-down"></i>
+        </button>
+    </article>
+    {% endfor %}
+</section>
+{% endblock %}

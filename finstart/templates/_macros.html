@@ -1,0 +1,25 @@
+{# Komponen kecil yang dipakai ulang di banyak halaman #}
+
+{% macro period_filter(month, year, action, allow_all=False) %}
+<form class="period-filter" method="get" action="{{ action }}">
+    <select name="month" aria-label="Bulan" data-autosubmit>
+        {% if allow_all %}<option value="0" {{ 'selected' if month == 0 }}>Semua bulan</option>{% endif %}
+        {% for name in months[1:] %}
+        <option value="{{ loop.index }}" {{ 'selected' if month == loop.index }}>{{ name }}</option>
+        {% endfor %}
+    </select>
+    <select name="year" aria-label="Tahun" data-autosubmit>
+        {% if allow_all %}<option value="0" {{ 'selected' if year == 0 }}>Semua tahun</option>{% endif %}
+        {% for y in years %}
+        <option value="{{ y }}" {{ 'selected' if year == y }}>{{ y }}</option>
+        {% endfor %}
+    </select>
+    <noscript><button class="btn btn-ghost" type="submit">Terapkan</button></noscript>
+</form>
+{% endmacro %}
+
+{% macro progress(percent, status='ok') %}
+<div class="progress" role="progressbar" aria-valuenow="{{ percent|round|int }}" aria-valuemin="0" aria-valuemax="100">
+    <div class="progress-bar progress-{{ status }}" style="width: {{ [percent, 100]|min }}%"></div>
+</div>
+{% endmacro %}
